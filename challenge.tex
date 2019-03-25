@@ -36,7 +36,7 @@ Where:
 \item $\alpha$, $\beta$ and $\Gamma$ are constants
 \item $S_e$ is an integer number representing the skill of the editor. $S \in [1,5]$. Editors with a higher skill are more proficient than others.
 \item $W(t)$ is the number of words of the task.
-\item LP is the language pair (e.g Portuguese would be )
+\item LP is the language pair (e.g Portuguese to English would be pt\_en)
 \end{itemize}
 
 
@@ -65,10 +65,16 @@ The selection of the quality interval should take in consideration the skill of 
 \begin{align}
 P(A | E) =
   \begin{cases}
-    \frac{P(A)}{A}      & \quad \text{if } S(E) \neq B  \\
-    P(A) . \beta A         & \quad \text{if } S(E) = B  \\  \\
+    \frac{P(A)}{A}      & \quad \text{if } S(E) \neq D  \\
+    P(A) . \beta A         & \quad \text{if } S(E) = D  \\
   \end{cases}
 \end{align}
+
+Where:
+
+\begin{itemize}
+\item D is one of the five domains: travel, fintech, e-commerce, sports and gamming
+\end{itemize}
 
 
 \section{Problem}
