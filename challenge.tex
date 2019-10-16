@@ -8,142 +8,113 @@
 
 \maketitle
 
-\section{Context}
+\section{Context}\label{sec:context}
 
-Unbabel's translation service is an hybrid model where AI and Humans play a well defined role. 
-In this challenge we will focus on the human part of the pipeline and not on the Machine Translation (MT) one.
+Unbabel's translation service is a hybrid model where AI and Humans both play a well defined role.
+In this challenge we will focus on the human part of the pipeline and not on the Machine Translation (MT).
 
-Our scenario is the following:
+Our scenario is the following.
+A client sends their customer support tickets to Unbabel for translation.
+MT generates a translation for each ticket.
+After the MT step, Unbabel sends the content to post editors to make sure translations have good quality.
+In this process a translation job is broken into a number of tasks.
+These tasks are then randomly assigned to a set of post editors.
+After the editors work on the task, the content is regrouped and sent back to the client.
+In this process there are two very important variables: quality and price.
 
-A client will send Unbabel customer support tickets for translation. After the MT step, Unbabel will send the content post editors to make sure translations have good quality. In this process a translation job is broken into a number of tasks. These tasks are then randomly assigned to a set of post editors. After the editors work on the task, the content is regrouped and sent back to the client. In this process there are two very important variables: quality and price.
-
+\subsection*{Price}
 Price is a positive integer number that represents how much we pay an editor for a task.
-
-A price, $P(t)$, of a task $t$ is defined as:
+The price, $P(t)$, of a task $t$ depends on the proficiency of the post-editor that proof-reads the MT text, relative to the language pair and domain of the task, $LP_t$ and $d_t$ respectively.
+It is defined as:
 
 \begin{align}
 P(t) =
   \begin{cases}
-    \alpha W(t)  S_e       & \quad \text{if } LP_e \in \{LP_t\}  \\
-    W(t) \log(\Gamma + S_e)        & \quad \text{if } LP_e \notin \{LP_t\}  \\
+    \alpha W_t  S_e(d_t)      & \quad \text{if } LP_t \in \{LP_e\}  \\
+    W_t \log(\gamma + S_e(d_t))        & \quad \text{if } LP_t \notin \{LP_e\}  \\
   \end{cases}
 \end{align}
 
-
-Where:
+where
 
 \begin{itemize}
-\item $\alpha$, $\beta$ and $\Gamma$ are constants
-\item $S_e$ is an integer number representing the skill of the editor. $S \in [1,5]$. Editors with a higher skill are more proficient than others.
-\item $W(t)$ is the number of words of the task.
-\item LP is the language pair (e.g Portuguese to English would be pt\_en)
+\item $\alpha$ and $\gamma$ are constants,
+\item $W_t$ is the number of words of the task,
+\item $S_e(d_t)$ is an integer number representing the skill of the editor in the domain $d_t$,  $S_e(d_t) \in [1,5]$ (editors with a higher skill are more proficient than others),
+\item task domains $d_t$ are one of five domains: travel, fintech, e-commerce, sports and gamming,
+\item $\{LP_e\}$ is the list of language pairs editor $e$ is proficient in (e.g Portuguese to English would be pt\_en).
 \end{itemize}
 
 
-Quality is an integer number between 0 and 100 and it's a metric used to evaluate how good a translation is. 
-
-For simplicity, the way we calculate the quality, $Q(t)$, of a task can be defined as:
+\subsection*{Quality}
+The quality of a task, an integer between 0 and 5, is a metric used to evaluate how good a translation is.
+It is defined as:
 
 \begin{align}
 Q(t) =
   \begin{cases}
-    select\_element(Int_e)      & \quad \text{if } LP_e \in \{LP_t\}  \\
-    0  & \quad \text{if } LP_e \notin \{LP_t\}  \\
+    A_e(t)      & \quad \text{if } LP_t \in \{LP_e\}  \\
+    0  & \quad \text{if } LP_t \notin \{LP_e\}  \\
   \end{cases}
 \end{align}
 
-Where:
+where
 
 \begin{itemize}
-\item $Int_e$ is the quality interval. 
-\item Quality interval - For simplicity we divide the space $Q$ into $S-1$ buckets. In this example $S=5$.
+\item $A_e(t)$ is the quality interval sampled from the distribution described below.
 \end{itemize}
 
-The selection of the quality interval should take in consideration the skill of the post editor. It is expected that post editors with higher skill produce tasks with higher quality. Hence, the probability of a post editor $E$ be assigned to a quality interval $A$ is given by:
+The selection of the quality interval should take in consideration the skill of the post editor.
+It is expected that post editors with higher skill produce tasks with higher quality, although they can sometimes produce some editions with lower quality.
+Hence, the probability that the work provided by a post editor $e$ on a task $t$ be assigned a quality interval $A_e(t)$ is given by:
 
 
 \begin{align}
-P(A | E) =
+P(A_e(t)) =
   \begin{cases}
-    \frac{P(A)}{A}      & \quad \text{if } S(E) \neq D  \\
-    P(A) . \beta A         & \quad \text{if } S(E) = D  \\
+    \frac{P(A)}{A}      & \quad \text{if } S_e(d_t) < $\delta$  \\
+    P(A) \cdot \beta A         & \quad \text{if } S_e(d_t) \geq $\delta$  \\
   \end{cases}
 \end{align}
 
-Where:
+where
 
 \begin{itemize}
-\item D is one of the five domains: travel, fintech, e-commerce, sports and gamming
+\item A is a quality interval $ \in \{1, \dots, 5\}$,
+\item $P(A)$ reflects the a-priori probability that the performance of an editor is categorized as having quality $A$,
+\item $\beta$ and $\delta$ are constants.
 \end{itemize}
 
 
-\section{Problem}
+\section{Problem}\label{sec:problem}
 
-There has been some complains lately from both customers and post editors. 
+There have been some complaints lately from both customers and post editors.
 
-Clients complaint that quality is not stable and that they're having problems in trusting the service. This is critical and must be solved.
+Clients complain that quality is not stable and that they're having problems in trusting the service.
+This is critical and must be solved.
 
-A large group of post editors claim that sometimes they're starving! In other words, they're not getting any tasks. This might cause them to leave and that's is something that cannot happen.
+A large group of post editors claim that sometimes they're starving!
+In other words, they're not getting any tasks.
+This might cause them to leave and that is something that cannot happen.
 
-Your mission is, based on the models defined below and a dataset  (which we will provide shortly) come up with a solution for this problem.
+Your mission is, based on the models defined above and a dataset (which we will provide shortly), to come up with a solution for this problem.
 
-\section{Notes}
 
-One of the most important things that we'll evaluate is the consistency of your solution. It needs to tell a story so make sure every step and decision you took.
+\section{Notes}\label{sec:notes}
 
-How you tell that story is entirely up to you but make sure you include some visualizations (an image is worth a thousand words).
+As a data scientist, you will have a vital role in understanding whether problems are well defined and counsel stakeholders as to the steps needed to address issues related to missing information or logical gaps.
+If you find any such issues in this challenge, we encourage you to develop a solution.
+One of the most important things we'll evaluate is the consistency of your approach.
+It needs to tell a story, so make sure to document every step and decision you take, along with any advice you may have as to how the distribution of tasks could be improved in your view.
+
+How you tell that story is entirely up to you but keep in mind that data scientists often need to communicate their findings with others that may not be as data-savy, so make sure to include some visualizations of your results if appropriate: an image can be worth a thousand words!
 
 If you have questions please open an issue.
 
 Good luck and have fun!
 
-\section{Data Models}
+\section{Datasets}\label{sec:datasets}
 
-\begin{lstlisting}[language=Python]
-from dataclasses import dataclass
-
-domains = ['travel', 'fintech', 'ecommerce', 'sports', 'gamming']
-category = ['Small', 'Medium', 'Enterprise']
-
-@dataclass
-class Ticket(object):
-    id: str
-    client_id: str
-    tone: str
-    topic: str
-    number_words: int
-    source_language: str
-    target_language: str
-    quality_score: float
-    price: float
-    
-@dataclass
-class Client(object):
-    id: str
-    domain: str
-    category: str
-
-@dataclass
-class Task(object):
-    id: str
-    sequence_number: int
-    number_words: int
-    ticket_id: str
-    cost: float
-
-@dataclass
-class Editor(object):
-    id: str
-    travel_skill: int
-    fintech_skill: int
-    ecommerce_skill: int
-    sport_skill: int
-    gamming_skill: int
-\end{lstlisting}
-
-
-\section{Datasets}
-
-Check the dataset.zip file
+Check the dataset.zip file.
 
 \end{document}
